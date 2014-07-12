@@ -1,11 +1,13 @@
 #![crate_type = "rlib"]
 
-//! Macro to create a "view box", a box containing immutable data
-//! plus a "view" struct that can have interior references into
-//! the data.  The view box can be moved around as an atomic unit.
-//! I haven't completely convinced myself this is memory safe yet.
-//! In particular, I need to make sure dangling pointers can't be
-//! observed if the view struct implements Drop
+//! Macro to create a "view box", a box containing immutable data plus
+//! a "view" struct that can have interior references into the data.
+//! The view box can be moved around as an atomic unit.  I haven't
+//! convinced myself this is memory safe yet.  Known issues:
+//!
+//! * If the view type implements Drop (via #[unsafe_destructor]), it
+//! could potentially observe dangling references depending on the
+//! order in which struct fields are destroyed.
 #![feature(macro_rules, globs)]
 
 #[macro_export]

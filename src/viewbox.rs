@@ -10,8 +10,7 @@
 
 #[macro_export]
 macro_rules! viewbox(
-    ($(#[$attr:meta])* struct $name:ident<$d:ty, $v:ident>;) => (
-        $(#[$attr])*
+    (struct $name:ident<$d:ty, $v:ident>;) => (
         pub struct $name {
             data: Box<$d>,
             view: $v<'static>
@@ -23,10 +22,7 @@ macro_rules! viewbox(
                 let mut d = box data;
                 let v = unsafe { ::std::mem::transmute(f(&mut *d)) };
                 
-                $name {
-                    data: d,
-                    view: v
-                }
+                $name { data: d, view: v }
             }
 
             pub fn new_result<E>(data: $d,
@@ -35,12 +31,7 @@ macro_rules! viewbox(
                                  -> ::std::result::Result<$name,($d,E)> {
                 let mut d = box data;
                 match f(&mut *d).map(|v| unsafe { ::std::mem::transmute(v) }) {
-                    Ok(v) => {
-                        Ok($name {
-                            data: d,
-                            view: v
-                        })
-                    },
+                    Ok(v) => Ok($name { data: d, view: v }),
                     Err(e) => Err((*d,e))
                 }
             }
@@ -58,7 +49,25 @@ macro_rules! viewbox(
                 unsafe { ::std::mem::transmute(&mut self.view) }
             }
         }
-    )
+    );
+    (#[deriving(PartialEq $(,$derive:ident)*)] struct $name:ident<$d:ty, $v:ident>;) => (
+        impl ::std::cmp::PartialEq for $name {
+            fn eq(&self, other: &$name) -> bool { self.view() == other.view(); }
+        }
+        viewbox!(struct $name<$d,$v>;)
+    );
+    (#[deriving(Show $(,$derive:ident)*)] struct $name:ident<$d:ty, $v:ident>;) => (
+        impl ::std::fmt::Show for $name {
+            fn fmt(&self, fmt: &mut ::std::fmt::Formatter)
+                   -> ::std::result::Result<(), ::std::fmt::FormatError> {
+                self.view().fmt(fmt)
+            }
+        }
+        viewbox!(struct $name<$d,$v>;)
+    );
+    (#[deriving()] struct $name:ident<$d:ty, $v:ident>;) => (
+        viewbox!(struct $name<$d,$v>;)
+    );
 )
 
 #[cfg(test)]

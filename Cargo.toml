@@ -1,0 +1,7 @@
+[package]
+name = "viewbox"
+version = "0.0.1"
+authors = [ "bkoropoff@gmail.com" ]
+
+[[lib]]
+name = "viewbox"

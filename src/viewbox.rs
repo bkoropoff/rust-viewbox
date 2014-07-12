@@ -51,7 +51,7 @@ macro_rules! viewbox(
             }
 
             pub fn view<'a>(&'a self) -> &'a $v<'a> {
-                &self.view
+                unsafe { ::std::mem::transmute(&self.view) }
             }
 
             pub fn mut_view<'a>(&'a mut self) -> &'a mut $v<'a> {

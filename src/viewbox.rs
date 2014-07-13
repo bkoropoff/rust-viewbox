@@ -7,7 +7,13 @@
 //!
 //! * If the view type implements Drop (via #[unsafe_destructor]), it
 //! could potentially observe dangling references depending on the
-//! order in which struct fields are destroyed.
+//! order in which struct fields are destroyed.  Currently, struct
+//! fields seem to be destroyed in reverse order, which means things
+//! should work fine as-is, but this depends on implementation details
+//! of the compiler.  This could be fixed trivially by changing the
+//! struct internals and adding a Drop impl that forces the view
+//! to be destroyed first (e.g. by putting it in an Option and calling
+//! .take()) at the cost of memory usage.
 #![feature(macro_rules, globs)]
 
 #[macro_export]

@@ -98,9 +98,10 @@ mod test {
         struct TestBox<TestData,TestView>;
     }
     
-    // Mutable view into string
+    // Mutable view into TestData
     struct MutView<'a> {
-        x: &'a mut String
+        x: &'a mut i32,
+        y: &'a mut String
     }
 
     // MutBox combines TestData and MutView
@@ -127,11 +128,12 @@ mod test {
     #[test]
     fn mutation() {
         let t = TestData { foo: 42, bar: "Hello".to_string() };
-        let mut v = MutBox::new(t, |d| MutView { x: &mut d.bar });
+        let mut v = MutBox::new(t, |d| MutView { x: &mut d.foo, y: &mut d.bar });
         
-        *v.mut_view().x = "Goodbye".to_string();
+        *v.mut_view().x = 5;
+        *v.mut_view().y = "Goodbye".to_string();
         let t = v.unwrap();
-        assert_eq!(t.bar, "Goodbye".to_string());
+        assert_eq!(t, TestData { foo: 5, bar: "Goodbye".to_string() });
     }
 
     #[test]

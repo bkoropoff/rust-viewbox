@@ -1,6 +1,6 @@
 #![crate_type = "rlib"]
 
-//! Macro to create a "view box", a box containing immutable data plus
+//! Macro to create a "view box", a box containing data plus
 //! a "view" struct that can have interior references into the data.
 //! The view box can be moved around as an atomic unit.  I haven't
 //! convinced myself this is memory safe yet.  Known issues:

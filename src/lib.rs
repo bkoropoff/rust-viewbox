@@ -10,12 +10,13 @@ macro_rules! viewbox(
     (struct $name:ident<$d:ty, $v:ident>;) => (
         pub struct $name {
             view: $v<'static>,
+            #[allow(dead_code)]
             data: Box<$d>
         }
 
         #[allow(dead_code)]
         impl $name {
-            pub fn new(data: $d, f: <'a>|&'a mut $d| -> $v<'a>) -> $name {
+            pub fn new(data: $d, f: for<'a>|&'a mut $d| -> $v<'a>) -> $name {
                 let mut d = box data;
                 let v = unsafe { ::std::mem::transmute(f(&mut *d)) };
                 
@@ -23,7 +24,7 @@ macro_rules! viewbox(
             }
 
             pub fn new_result<E>(data: $d,
-                                 f: <'a>|&'a mut $d| 
+                                 f: for<'a>|&'a mut $d|
                                     -> ::std::result::Result<$v<'a>,E>)
                                  -> ::std::result::Result<$name,($d,E)> {
                 let mut d = box data;
@@ -69,6 +70,9 @@ macro_rules! viewbox(
 
 #[cfg(test)]
 mod test {
+    extern crate arena;
+    use self::arena::TypedArena;
+
     // Test data structure
     #[deriving(PartialEq,Show)]
     struct TestData {
@@ -130,5 +134,31 @@ mod test {
         let t = TestData { foo: 42, bar: "Hello".to_string() };
         let v = MutBox::new_result(t, |_| Err("Nope")).err().unwrap();
         assert_eq!(v, (TestData { foo: 42, bar: "Hello".to_string() }, "Nope"))
+    }
+
+    struct ArenaView<'a> {
+        arena: &'a TypedArena<int>,
+        vec: Vec<&'a int>
+    }
+
+    viewbox! {
+        struct ArenaBox<TypedArena<int>, ArenaView>;
+    }
+
+    #[test]
+    fn arenaview() {
+        let mut vb = ArenaBox::new(
+            TypedArena::new(),
+            |a| ArenaView { arena: a, vec: Vec::new()});
+
+        spawn(proc() {
+            let v = vb.mut_view();
+            let a = v.arena.alloc(1);
+            let b = v.arena.alloc(2);
+            let c = v.arena.alloc(3);
+            v.vec.push(a);
+            v.vec.push(b);
+            v.vec.push(c);
+        });
     }
 }

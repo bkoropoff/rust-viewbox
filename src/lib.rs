@@ -152,7 +152,7 @@ mod test {
             TypedArena::new(),
             |a| ArenaView { arena: a, vec: Vec::new()});
 
-        spawn(proc() {
+        spawn(move || {
             let v = vb.view_mut();
             let a = v.arena.alloc(1);
             let b = v.arena.alloc(2);

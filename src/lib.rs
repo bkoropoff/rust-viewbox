@@ -44,7 +44,7 @@ macro_rules! viewbox(
                 unsafe { ::std::mem::transmute(&self.view) }
             }
 
-            pub fn mut_view<'a>(&'a mut self) -> &'a mut $v<'a> {
+            pub fn view_mut<'a>(&'a mut self) -> &'a mut $v<'a> {
                 unsafe { ::std::mem::transmute(&mut self.view) }
             }
         }
@@ -124,8 +124,8 @@ mod test {
         let t = TestData { foo: 42, bar: "Hello".to_string() };
         let mut v = MutBox::new(t, |d| MutView { x: &mut d.foo, y: &mut d.bar });
         
-        *v.mut_view().x = 5;
-        *v.mut_view().y = "Goodbye".to_string();
+        *v.view_mut().x = 5;
+        *v.view_mut().y = "Goodbye".to_string();
         let t = v.into_inner();
         assert_eq!(t, TestData { foo: 5, bar: "Goodbye".to_string() });
     }
@@ -153,7 +153,7 @@ mod test {
             |a| ArenaView { arena: a, vec: Vec::new()});
 
         spawn(proc() {
-            let v = vb.mut_view();
+            let v = vb.view_mut();
             let a = v.arena.alloc(1);
             let b = v.arena.alloc(2);
             let c = v.arena.alloc(3);

@@ -3,7 +3,7 @@
 //! Macro to create a "view box", a box containing data plus
 //! a "view" struct that can have interior references into the data.
 //! The view box can be moved around as an atomic unit.
-#![feature(macro_rules, globs)]
+#![feature(macro_rules, globs, unboxed_closures)]
 
 #[macro_export]
 macro_rules! viewbox(
@@ -16,17 +16,18 @@ macro_rules! viewbox(
 
         #[allow(dead_code)]
         impl $name {
-            pub fn new(data: $d, f: for<'a>|&'a mut $d| -> $v<'a>) -> $name {
+            pub fn new<F>(data: $d, f: F) -> $name
+                          where F: for<'a> FnOnce(&'a mut $d) -> $v<'a> {
                 let mut d = box data;
                 let v = unsafe { ::std::mem::transmute(f(&mut *d)) };
                 
                 $name { data: d, view: v }
             }
 
-            pub fn new_result<E>(data: $d,
-                                 f: for<'a>|&'a mut $d|
-                                    -> ::std::result::Result<$v<'a>,E>)
-                                 -> ::std::result::Result<$name,($d,E)> {
+            pub fn new_result<E,F>(data: $d,
+                                   f: F)
+                                   -> ::std::result::Result<$name,($d,E)>
+                                   where F: for<'a> FnOnce(&'a mut $d) -> ::std::result::Result<$v<'a>,E> {
                 let mut d = box data;
                 match f(&mut *d).map(|v| unsafe { ::std::mem::transmute(v) }) {
                     Ok(v) => Ok($name { data: d, view: v }),

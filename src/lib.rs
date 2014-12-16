@@ -34,7 +34,7 @@ macro_rules! viewbox(
                 }
             }
             
-            pub fn unwrap(self)-> $d {
+            pub fn into_inner(self)-> $d {
                 let $name { data: box data, .. } = self;
                 data
             }
@@ -113,7 +113,7 @@ mod test {
         assert_eq!(v.view().x, &42i32);
         assert_eq!(v.view().y, "Hello");
         // We can unwrap the view to get the data back
-        let t = v.unwrap();
+        let t = v.into_inner();
         assert_eq!(t.foo, 42i32);
         assert_eq!(t.bar, "Hello".to_string());
     }
@@ -125,7 +125,7 @@ mod test {
         
         *v.mut_view().x = 5;
         *v.mut_view().y = "Goodbye".to_string();
-        let t = v.unwrap();
+        let t = v.into_inner();
         assert_eq!(t, TestData { foo: 5, bar: "Goodbye".to_string() });
     }
 

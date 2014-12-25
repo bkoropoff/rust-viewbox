@@ -6,7 +6,7 @@
 #![feature(macro_rules, globs, unboxed_closures)]
 
 #[macro_export]
-macro_rules! viewbox(
+macro_rules! viewbox {
     (struct $name:ident<$d:ty, $v:ident>;) => (
         pub struct $name {
             view: $v<'static>,
@@ -67,12 +67,13 @@ macro_rules! viewbox(
     (#[deriving()] struct $name:ident<$d:ty, $v:ident>;) => (
         viewbox!(struct $name<$d,$v>;)
     );
-)
+}
 
 #[cfg(test)]
 mod test {
     extern crate arena;
     use self::arena::TypedArena;
+    use std::thread::Thread;
 
     // Test data structure
     #[deriving(PartialEq,Show)]
@@ -152,7 +153,7 @@ mod test {
             TypedArena::new(),
             |a| ArenaView { arena: a, vec: Vec::new()});
 
-        spawn(move || {
+        Thread::spawn(move || {
             let v = vb.view_mut();
             let a = v.arena.alloc(1);
             let b = v.arena.alloc(2);
@@ -160,6 +161,6 @@ mod test {
             v.vec.push(a);
             v.vec.push(b);
             v.vec.push(c);
-        });
+        }).join().ok().unwrap();
     }
 }

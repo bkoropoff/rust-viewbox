@@ -2,8 +2,7 @@
 
 //! Macro to create a "view box", a box containing data plus
 //! a "view" struct that can have interior references into the data.
-//! The view box can be moved around as an atomic unit.
-#![feature(macro_rules, globs, unboxed_closures)]
+//! The view box be can moved around as an atomic unit.
 
 #[macro_export]
 macro_rules! viewbox {
@@ -49,14 +48,14 @@ macro_rules! viewbox {
             }
         }
     );
-    (#[deriving(PartialEq $(,$derive:ident)*)] struct $name:ident<$d:ty, $v:ident>;) => (
+    (#[derive(PartialEq $(,$derive:ident)*)] struct $name:ident<$d:ty, $v:ident>;) => (
         impl ::std::cmp::PartialEq for $name {
             fn eq(&self, other: &$name) -> bool { self.view() == other.view(); }
         }
         viewbox!(struct $name<$d,$v>;)
     );
-    (#[deriving(Show $(,$derive:ident)*)] struct $name:ident<$d:ty, $v:ident>;) => (
-        impl ::std::fmt::Show for $name {
+    (#[derive(Debug $(,$derive:ident)*)] struct $name:ident<$d:ty, $v:ident>;) => (
+        impl ::std::fmt::Debug for $name {
             fn fmt(&self, fmt: &mut ::std::fmt::Formatter)
                    -> ::std::result::Result<(), ::std::fmt::FormatError> {
                 self.view().fmt(fmt)
@@ -64,19 +63,15 @@ macro_rules! viewbox {
         }
         viewbox!(struct $name<$d,$v>;)
     );
-    (#[deriving()] struct $name:ident<$d:ty, $v:ident>;) => (
+    (#[derive()] struct $name:ident<$d:ty, $v:ident>;) => (
         viewbox!(struct $name<$d,$v>;)
     );
 }
 
 #[cfg(test)]
 mod test {
-    extern crate arena;
-    use self::arena::TypedArena;
-    use std::thread::Thread;
-
     // Test data structure
-    #[deriving(PartialEq,Show)]
+    #[derive(PartialEq,Debug)]
     struct TestData {
         foo: i32,
         bar: String
@@ -136,31 +131,5 @@ mod test {
         let t = TestData { foo: 42, bar: "Hello".to_string() };
         let v = MutBox::new_result(t, |_| Err("Nope")).err().unwrap();
         assert_eq!(v, (TestData { foo: 42, bar: "Hello".to_string() }, "Nope"))
-    }
-
-    struct ArenaView<'a> {
-        arena: &'a TypedArena<int>,
-        vec: Vec<&'a int>
-    }
-
-    viewbox! {
-        struct ArenaBox<TypedArena<int>, ArenaView>;
-    }
-
-    #[test]
-    fn arenaview() {
-        let mut vb = ArenaBox::new(
-            TypedArena::new(),
-            |a| ArenaView { arena: a, vec: Vec::new()});
-
-        Thread::spawn(move || {
-            let v = vb.view_mut();
-            let a = v.arena.alloc(1);
-            let b = v.arena.alloc(2);
-            let c = v.arena.alloc(3);
-            v.vec.push(a);
-            v.vec.push(b);
-            v.vec.push(c);
-        }).join().ok().unwrap();
     }
 }

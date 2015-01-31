@@ -104,7 +104,7 @@ mod test {
         // Create some data
         let t = TestData { foo: 42, bar: "Hello".to_string() };
         // Move it into box, creating a view with interior references
-        let v = TestBox::new(t, |d| TestView { x: &d.foo, y: d.bar.as_slice() });
+        let v = TestBox::new(t, |d| TestView { x: &d.foo, y: &d.bar });
         
         // We can access the boxed data via the view
         assert_eq!(v.view().x, &42i32);
